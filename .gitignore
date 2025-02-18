@@ -6,6 +6,7 @@ proj.env
 __pycache__/
 *.pyc
 *.pyo
+.cache
 
 # Ignore Virtual Environment
 venv/
