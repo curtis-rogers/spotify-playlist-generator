@@ -1,6 +1,5 @@
 import os
 import spotipy
-import requests
 from spotipy.oauth2 import SpotifyOAuth
 from flask import Flask, request, redirect, session, url_for, jsonify
 from dotenv import load_dotenv
@@ -197,6 +196,31 @@ def recommend_tracks():
         })
 
     return jsonify({"recommended_tracks": recommended_tracks})
+
+
+
+@app.route("/create-playlist", methods=["POST"])
+def create_playlist():
+    sp = get_spotify_client()
+    if not sp:
+        return redirect(url_for("login"))
+
+    user_id = sp.current_user()["id"]
+
+    # Get playlist name and genre from request
+    playlist_name = request.json.get("name", "My Smart Playlist")
+    selected_genre = request.json.get("genre", None)
+
+    # Fetch recommended tracks based on selected genre
+    recommended_tracks = recommend_tracks().json["recommended_tracks"]
+    track_uris = [f"spotify:track:{track['id']}" for track in recommended_tracks]
+
+    # Create a playlist and add tracks
+    playlist = sp.user_playlist_create(user_id, playlist_name, public=True)
+    sp.user_playlist_add_tracks(user_id, playlist["id"], track_uris)
+
+    return jsonify({"message": "Playlist created!", "playlist_url": playlist["external_urls"]["spotify"]})
+
 
 
 @app.route("/debug-token")
